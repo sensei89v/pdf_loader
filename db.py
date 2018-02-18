@@ -2,6 +2,7 @@ import sqlite3
 from sqlalchemy import create_engine, Column, MetaData, Table, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.types import LargeBinary, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -101,6 +102,23 @@ class DBEngine(object):
         pdf = Pdf(user_id=user_id, filename=pdf.get_filename(), pdf=pdf.get_data())
         session.add(pdf)
         session.commit()
+
+    def get_pdf(self, pdf_id):
+        session = self._get_session()
+
+        try:
+            pdf = session.query(
+                Pdf.pdf,
+                Pdf.filename
+            ).filter(
+                Pdf.id == pdf_id
+            ).one()
+        except NoResultFound as e:
+            pdf = None
+
+        session.rollback()
+
+        return pdf
 
     def get_list_page(self):
         pass

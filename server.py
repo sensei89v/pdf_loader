@@ -8,7 +8,7 @@ from pdf import PdfDoc
 from db import DBEngine
 
 
-class DBHandler(RequestHandler):
+class BaseHandler(RequestHandler):
     def initialize(self, db_engine, template_loader):
         self.db_engine = db_engine
         self.template_loader = template_loader
@@ -28,12 +28,12 @@ class DBHandler(RequestHandler):
             return user_id
 
 
-class MainHandler(DBHandler):
+class MainHandler(BaseHandler):
     def get(self):
         self.write("Hello, world")
 
 
-class LoginHandler(DBHandler):
+class LoginHandler(BaseHandler):
     PAGE = 'login.html'
 
     def get(self):
@@ -56,13 +56,14 @@ class LoginHandler(DBHandler):
 
         self.redirect('/pdf')
 
+
 class LogoutHandler(RequestHandler):
     def get(self):
         self.clear_cookie('user_id')
         self.redirect('/login')
 
 
-class PdfHandler(DBHandler):
+class PdfHandler(BaseHandler):
     PAGE = 'pdf.html'
     UPLOAD_KEY = 'fileupload'
 
@@ -71,7 +72,7 @@ class PdfHandler(DBHandler):
             self.login = row.login
             self.filename = row.filename
             self.timestamp = row.timestamp
-            self.pdf_link = row.id
+            self.pdf_link = "pdf/%s" % row.id
             self.png_table_link = row.id
 
     def get(self):
@@ -95,12 +96,27 @@ class PdfHandler(DBHandler):
         self.db_engine.append_pdf(user_id, pdf)
         self.write("done")
 
-class PageHandler(DBHandler):
+
+class PageHandler(BaseHandler):
     PAGE = 'page.html'
 
     def get(self):
         self.get_user_or_redirect()
         self.write(self.get_page(self.PAGE))
+
+
+class PdfDownloadHandler(BaseHandler):
+    def get(self, pdf_id):
+        self.get_user_or_redirect()
+        # TODO: обработка ошибок
+        pdf = self.db_engine.get_pdf(pdf_id)
+
+        if pdf is None:
+            pass
+
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', 'attachment; filename=' + pdf.filename)
+        self.write(pdf.pdf)
 
 
 class Server(object):
@@ -116,6 +132,7 @@ class Server(object):
             (r"/login", LoginHandler, init_db_args),
             (r"/logout", LogoutHandler),
             (r"/pdf", PdfHandler, init_db_args),
+            (r"/pdf/(?P<pdf_id>\w+)", PdfDownloadHandler, init_db_args),
             (r"/page/(?P<pdf_id>\w+)", PageHandler),
             (r"/.*", MainHandler, init_db_args)
         ])
