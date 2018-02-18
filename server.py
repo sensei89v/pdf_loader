@@ -84,12 +84,12 @@ class PdfHandler(BaseHandler):
     def post(self):
         user_id = self.get_user_or_redirect()
         if self.UPLOAD_KEY not in self.request.files:
-            pass
+            raise HTTPError(400)
 
         upload_files = self.request.files[self.UPLOAD_KEY]
 
         if len(upload_files) != 1:
-            pass
+            raise HTTPError(400)
 
         upload_file = upload_files[0]
         pdf = PdfDoc(upload_file.filename, upload_file.body)
