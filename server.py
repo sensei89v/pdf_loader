@@ -1,6 +1,6 @@
 import os
 from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler, Application
+from tornado.web import RequestHandler, Application, HTTPError
 from tornado.httpserver import HTTPServer
 from tornado.template import Loader
 
@@ -47,7 +47,7 @@ class LoginHandler(BaseHandler):
         password = self.get_argument('password', None)
 
         if login is None or password is None:
-            pass
+            raise HTTPError(400)
 
         user_id = self.db_engine.get_user(login, password)
 
@@ -110,7 +110,7 @@ class PageHandler(BaseHandler):
         filename = self.db_engine.get_pdf_filename(pdf_id)
 
         if filename is None:
-            pass
+            raise HTTPError(400)
 
         basename = os.path.basename(filename)
         page_list = self.db_engine.get_page_list(pdf_id)
@@ -121,11 +121,10 @@ class PageHandler(BaseHandler):
 class PdfDownloadHandler(BaseHandler):
     def get(self, pdf_id):
         self.get_user_or_redirect()
-        # TODO: обработка ошибок
         pdf = self.db_engine.get_pdf(pdf_id)
 
         if pdf is None:
-            pass
+            raise HTTPError(400)
 
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Disposition', 'attachment; filename=' + pdf.filename)
@@ -139,7 +138,7 @@ class PageDownloadHandler(BaseHandler):
         page = self.db_engine.get_page(pdf_id, page_num)
 
         if page is None:
-            pass
+            raise HTTPError(400)
 
         filename = "%s_%s.png" % (page.filename, page_num)
         self.set_header('Content-Type', 'application/octet-stream')
