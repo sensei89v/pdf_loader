@@ -63,7 +63,7 @@ class PdfDoc(object):
             # Читаем полученный PNG файл
             png_data = f_png_read.read()
             f_png_read.close()
-            page = PngPage(png_data, current_page)
+            page = PngPage(png_data, current_page + 1) # Чтобы у страниц нумерация была не с нуля
             result.append(page)
 
         # Удаляем временные файлы

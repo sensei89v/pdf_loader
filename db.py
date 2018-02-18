@@ -141,12 +141,11 @@ class DBEngine(object):
         session.rollback()
         return page_list
 
-    def append_pdf(self, user_id, pdf):
+    def append_pdf(self, user_id, pdf, pages):
         """
         Добавление документа в БД
         """
         session = self._get_session()
-        pages = pdf.split()
         pdf = Pdf(user_id=user_id, filename=pdf.get_filename(), pdf=pdf.get_data())
         session.add(pdf)
         session.flush()

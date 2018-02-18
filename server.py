@@ -129,8 +129,14 @@ class PdfHandler(BaseHandler):
             raise HTTPError(400)
 
         upload_file = upload_files[0]
-        pdf = PdfDoc(upload_file.filename, upload_file.body)
-        self.db_engine.append_pdf(user_id, pdf)
+        # Пытаемся преобразовать Pdf в набор страниц
+        try:
+            pdf = PdfDoc(upload_file.filename, upload_file.body)
+            pages = pdf.split()
+        except Exception as e:
+            raise HTTPError(400)
+
+        self.db_engine.append_pdf(user_id, pdf, pages)
         self.redirect("/pdf")
 
 
