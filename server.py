@@ -9,18 +9,31 @@ from db import DBEngine
 
 
 class BaseHandler(RequestHandler):
+    """
+    Обработчик событий. Отличается от обработчика по умолчанию рядом удобных методов
+    """
     def initialize(self, db_engine, template_loader):
         self.db_engine = db_engine
         self.template_loader = template_loader
 
     def get_page(self, page, **kwargs):
+        """
+        Возвращает сгенерированную страницу по шаблону
+        """
         return self.template_loader.load(page).generate(**kwargs)
 
-    def get_user(self):
+    def get_user_id(self):
+        """
+        Возвращает ID пользователя из Cookies
+        """
         return self.get_cookie('user_id', None)
 
-    def get_user_or_redirect(self):
-        user_id = self.get_user()
+    def get_user_id_or_redirect(self):
+        """
+        Возвращает ID пользователя из Cookies.
+        Если пользователя в Cookies нет, совершается принудительный редирект
+        """
+        user_id = self.get_user_id()
 
         if user_id is None:
             self.redirect("/login")
@@ -29,15 +42,21 @@ class BaseHandler(RequestHandler):
 
 
 class DefaultHandler(RequestHandler):
+    """
+    Обработчик для всех GET запросов, неподходящих под иные шаблоны
+    """
     def get(self):
         self.redirect("/login")
 
 
 class LoginHandler(BaseHandler):
+    """
+    Обработчик логина
+    """
     PAGE = 'login.html'
 
     def get(self):
-        if self.get_user() is None:
+        if self.get_user_id() is None:
             self.write(self.get_page(self.PAGE))
         else:
             self.redirect('/pdf')
@@ -49,7 +68,7 @@ class LoginHandler(BaseHandler):
         if login is None or password is None:
             raise HTTPError(400)
 
-        user_id = self.db_engine.get_user(login, password)
+        user_id = self.db_engine.get_user_id(login, password)
 
         if user_id is not None:
             self.set_cookie('user_id', str(user_id), path='/')
@@ -58,12 +77,18 @@ class LoginHandler(BaseHandler):
 
 
 class LogoutHandler(RequestHandler):
+    """
+    Обработчик логаута
+    """
     def get(self):
         self.clear_cookie('user_id')
         self.redirect('/login')
 
 
 class PdfHandler(BaseHandler):
+    """
+    Обработчик списка pdf файлов
+    """
     PAGE = 'pdf.html'
     UPLOAD_KEY = 'fileupload'
 
@@ -76,13 +101,19 @@ class PdfHandler(BaseHandler):
             self.png_table_link = '/page/%s' % row.id
 
     def get(self):
-        self.get_user_or_redirect()
+        """
+        Получение списка
+        """
+        self.get_user_id_or_redirect()
         pdf_list = self.db_engine.get_pdf_list()
         pdf_list = list(map(lambda x: self.PdfListItem(x), pdf_list))
         self.write(self.get_page(self.PAGE, pdf_list=pdf_list))
 
     def post(self):
-        user_id = self.get_user_or_redirect()
+        """
+        Добавление в список
+        """
+        user_id = self.get_user_id_or_redirect()
         if self.UPLOAD_KEY not in self.request.files:
             raise HTTPError(400)
 
@@ -98,6 +129,9 @@ class PdfHandler(BaseHandler):
 
 
 class PageHandler(BaseHandler):
+    """
+    Обработчик списка страниц pdf файлов
+    """
     PAGE = 'page.html'
 
     class PageListItem(object):
@@ -106,7 +140,7 @@ class PageHandler(BaseHandler):
             self.filename = '%s_%s.png' % (basename, row.page_num)
 
     def get(self, pdf_id):
-        self.get_user_or_redirect()
+        self.get_user_id_or_redirect()
         filename = self.db_engine.get_pdf_filename(pdf_id)
 
         if filename is None:
@@ -119,8 +153,11 @@ class PageHandler(BaseHandler):
 
 
 class PdfDownloadHandler(BaseHandler):
+    """
+    Обработчик запроса на скачивание файла
+    """
     def get(self, pdf_id):
-        self.get_user_or_redirect()
+        self.get_user_id_or_redirect()
         pdf = self.db_engine.get_pdf(pdf_id)
 
         if pdf is None:
@@ -132,8 +169,11 @@ class PdfDownloadHandler(BaseHandler):
 
 
 class PageDownloadHandler(BaseHandler):
+    """
+    Обработчик запроса на скачивание страницы
+    """
     def get(self, pdf_id, page_num):
-        self.get_user_or_redirect()
+        self.get_user_id_or_redirect()
         # TODO: обработка ошибок
         page = self.db_engine.get_page(pdf_id, page_num)
 
@@ -170,5 +210,3 @@ class Server(object):
     def run(self):
         self.http_server.listen(self.port)
         IOLoop.current().start()
-
-

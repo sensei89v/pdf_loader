@@ -15,5 +15,3 @@ if __name__ == "__main__":
     template_dir = os.path.abspath('templates')
     server = Server(port, path_to_db, template_dir)
     server.run()
-
-
