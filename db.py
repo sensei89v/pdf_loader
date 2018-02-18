@@ -11,13 +11,13 @@ Session = sessionmaker(autoflush=False)
 
 class User(Base):
     __tablename__ = 'user'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     login = Column(String(128), unique=True, nullable=False)
     password = Column(String(128), nullable=False)
 
 class Pdf(Base):
     __tablename__ = 'pdf'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     filename = Column(String(1024), nullable=False)
     pdf = Column(LargeBinary, nullable=False)
@@ -25,7 +25,7 @@ class Pdf(Base):
 
 class Page(Base):
     __tablename__ = 'page'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     pdf_id = Column(Integer, ForeignKey("pdf.id"), primary_key=True)
     page_num = Column(Integer, nullable=False)
     page = Column(LargeBinary, nullable=False)
@@ -99,8 +99,15 @@ class DBEngine(object):
 
     def append_pdf(self, user_id, pdf):
         session = self._get_session()
+        pages = pdf.split()
         pdf = Pdf(user_id=user_id, filename=pdf.get_filename(), pdf=pdf.get_data())
         session.add(pdf)
+        session.flush()
+
+        for current_page in pages:
+            page = Page(pdf_id=pdf.id, page=current_page.get_data(), page_num = current_page.get_page_num())
+            session.add(page)
+
         session.commit()
 
     def get_pdf(self, pdf_id):
