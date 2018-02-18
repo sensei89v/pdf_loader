@@ -13,5 +13,27 @@
                 <input type="submit" value="submit" id="submit" />
             </div>
         </form>
+
+        <table id="pdf_list"  >
+            <thead>
+            <tr>
+                <th>user</th>
+                <th>pdf</th>
+                <th>timestamp</th>
+                <th>link to png table</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for item in pdf_list %}
+                <tr>
+                    <td>{{item.login}}</td>
+                    <td><a href="{{item.pdf_link}}">{{item.filename}}</a></td>
+                    <td>{{item.timestamp}}</td>
+                    <td><a href="{{item.png_table_link}}">PNG table</a></td>
+                </tr>
+                {% end %}
+            </tbody>
+        </table>
     </body>
 </html>
+

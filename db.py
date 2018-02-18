@@ -89,8 +89,8 @@ class DBEngine(object):
             User.login
         ).filter(
             User.id == Pdf.user_id
-        ).order(
-            Pdf.timestamp.desc()
+        ).order_by(
+            Pdf.timestamp.asc()
         ).all()
 
         session.rollback()

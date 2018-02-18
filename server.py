@@ -66,9 +66,19 @@ class PdfHandler(DBHandler):
     PAGE = 'pdf.html'
     UPLOAD_KEY = 'fileupload'
 
+    class PdfListItem(object):
+        def __init__(self, row):
+            self.login = row.login
+            self.filename = row.filename
+            self.timestamp = row.timestamp
+            self.pdf_link = row.id
+            self.png_table_link = row.id
+
     def get(self):
         self.get_user_or_redirect()
-        self.write(self.get_page(self.PAGE))
+        pdf_list = self.db_engine.get_list_pdf()
+        pdf_list = list(map(lambda x: self.PdfListItem(x), pdf_list))
+        self.write(self.get_page(self.PAGE, pdf_list=pdf_list))
 
     def post(self):
         user_id = self.get_user_or_redirect()
