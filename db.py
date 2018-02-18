@@ -81,7 +81,7 @@ class DBEngine(object):
         else:
             return None
 
-    def get_list_pdf(self):
+    def get_pdf_list(self):
         session = self._get_session()
         pdf_list = session.query(
             Pdf.id,
@@ -96,6 +96,20 @@ class DBEngine(object):
 
         session.rollback()
         return pdf_list
+
+    def get_page_list(self, pdf_id):
+        session = self._get_session()
+        page_list = session.query(
+            Page.page,
+            Page.page_num
+        ).filter(
+            Page.pdf_id == pdf_id
+        ).order_by(
+            Page.page_num.asc()
+        ).all()
+
+        session.rollback()
+        return page_list
 
     def append_pdf(self, user_id, pdf):
         session = self._get_session()
@@ -125,6 +139,22 @@ class DBEngine(object):
 
         session.rollback()
         return pdf
+
+    def get_pdf_filename(self, pdf_id):
+        session = self._get_session()
+
+        try:
+            pdf = session.query(
+                Pdf.filename
+            ).filter(
+                Pdf.id == pdf_id
+            ).one()
+            filename = pdf.filename
+        except NoResultFound as e:
+            filename = None
+
+        session.rollback()
+        return filename
 
     def get_page(self, pdf_id, page_num):
         session = self._get_session()

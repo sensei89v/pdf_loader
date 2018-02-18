@@ -72,12 +72,12 @@ class PdfHandler(BaseHandler):
             self.login = row.login
             self.filename = row.filename
             self.timestamp = row.timestamp
-            self.pdf_link = "pdf/%s" % row.id
-            self.png_table_link = row.id
+            self.pdf_link = "/pdf/%s" % row.id
+            self.png_table_link = '/page/%s' % row.id
 
     def get(self):
         self.get_user_or_redirect()
-        pdf_list = self.db_engine.get_list_pdf()
+        pdf_list = self.db_engine.get_pdf_list()
         pdf_list = list(map(lambda x: self.PdfListItem(x), pdf_list))
         self.write(self.get_page(self.PAGE, pdf_list=pdf_list))
 
@@ -94,15 +94,28 @@ class PdfHandler(BaseHandler):
         upload_file = upload_files[0]
         pdf = PdfDoc(upload_file.filename, upload_file.body)
         self.db_engine.append_pdf(user_id, pdf)
-        self.write("done")
+        self.redirect("/pdf")
 
 
 class PageHandler(BaseHandler):
     PAGE = 'page.html'
 
-    def get(self):
+    class PageListItem(object):
+        def __init__(self, row, pdf_id, basename):
+            self.page_link = "/page/%s/%s" % (pdf_id, row.page_num)
+            self.filename = '%s_%s.png' % (basename, row.page_num)
+
+    def get(self, pdf_id):
         self.get_user_or_redirect()
-        self.write(self.get_page(self.PAGE))
+        filename = self.db_engine.get_pdf_filename(pdf_id)
+
+        if filename is None:
+            pass
+
+        basename = os.path.basename(filename)
+        page_list = self.db_engine.get_page_list(pdf_id)
+        page_list = list(map(lambda x: self.PageListItem(x, pdf_id, basename), page_list))
+        self.write(self.get_page(self.PAGE, page_list=page_list, filename=filename))
 
 
 class PdfDownloadHandler(BaseHandler):
@@ -148,7 +161,7 @@ class Server(object):
             (r"/logout", LogoutHandler),
             (r"/pdf", PdfHandler, init_db_args),
             (r"/pdf/(?P<pdf_id>\w+)", PdfDownloadHandler, init_db_args),
-            (r"/page/(?P<pdf_id>\w+)", PageHandler),
+            (r"/page/(?P<pdf_id>\w+)", PageHandler, init_db_args),
             (r"/page/(?P<pdf_id>\w+)/(?P<page_id>\w+)", PageDownloadHandler, init_db_args),
             (r"/.*", MainHandler, init_db_args)
         ])
