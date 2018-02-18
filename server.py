@@ -191,6 +191,9 @@ class Server(object):
         self.db_engine = DBEngine(dbname)
         self.port = port
 
+        if not os.path.exists(dbname):
+            self.db_engine.create_db()
+
         init_db_args = {
             'db_engine': self.db_engine,
             'template_loader': Loader(template_dir)

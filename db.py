@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, MetaData, Table, ForeignKey
+from sqlalchemy import create_engine, Column, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
@@ -38,7 +38,7 @@ class Page(Base):
     """
     __tablename__ = 'page'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    pdf_id = Column(Integer, ForeignKey("pdf.id"), primary_key=True)
+    pdf_id = Column(Integer, ForeignKey("pdf.id"))
     page_num = Column(Integer, nullable=False)
     page = Column(LargeBinary, nullable=False)
 
@@ -62,25 +62,6 @@ class DBEngine(object):
         """
         Создание таблиц БД
         """
-        Table('user', Base.metadata,
-            Column('id', Integer, primary_key=True, nullable=False),
-            Column('login', String(128)),
-            Column('password', String(128))
-        )
-
-        #Table('pdf', metadata,
-        #    Column('id', Integer, primary_key=True, nullable=False),
-        #    Column('user_id', Integer, ForeignKey("user.id"), nullable=False),
-        #    Column('data', LargeBinary(), nullable=False)
-        #)
-        #
-        #Table('page', metadata,
-        #    Column('id', Integer, primary_key=True, nullable=False),
-        #    Column('pdf_id', Integer, ForeignKey("pdf.id"), nullable=False),
-        #    Column('pagenum', Integer, nullable=False),
-        #    Column('data', LargeBinary(), nullable=False)
-        #)
-        #
         Base.metadata.create_all(self.engine)
 
     def add_user_to_db(self, login, password):

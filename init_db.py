@@ -10,8 +10,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     path_to_db = os.path.abspath(argv[1])
-    print(path_to_db)
-    #f = open(path_to_db, 'wb')
-    #f.close()
     engine = DBEngine(path_to_db)
     engine.create_db()
