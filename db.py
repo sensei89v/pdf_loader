@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.types import LargeBinary, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
+from utils import create_salt, hash_password, check_password
 Base = declarative_base()
 Session = sessionmaker(autoflush=False)
 
@@ -63,7 +64,9 @@ class DBEngine(object):
 
     def add_user_to_db(self, login, password):
         session = self._get_session()
-        user = User(login=login, password=password)
+        salt = create_salt()
+        hashed_password = hash_password(salt, password)
+        user = User(login=login, password=hashed_password)
         session.add(user)
         session.commit()
 
@@ -76,7 +79,8 @@ class DBEngine(object):
             return None
 
         user = users[0]
-        if user.password == password:
+
+        if check_password(password, user.password):
             return user.id
         else:
             return None
