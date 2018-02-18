@@ -117,8 +117,22 @@ class DBEngine(object):
             pdf = None
 
         session.rollback()
-
         return pdf
 
-    def get_list_page(self):
-        pass
+    def get_page(self, pdf_id, page_num):
+        session = self._get_session()
+
+        try:
+            page = session.query(
+                Pdf.filename,
+                Page.page
+            ).filter(
+                Pdf.id == pdf_id,
+                Page.pdf_id == pdf_id,
+                Page.page_num == page_num
+            ).one()
+        except NoResultFound as e:
+            page = None
+
+        session.rollback()
+        return page

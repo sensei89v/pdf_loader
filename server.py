@@ -119,6 +119,21 @@ class PdfDownloadHandler(BaseHandler):
         self.write(pdf.pdf)
 
 
+class PageDownloadHandler(BaseHandler):
+    def get(self, pdf_id, page_num):
+        self.get_user_or_redirect()
+        # TODO: обработка ошибок
+        page = self.db_engine.get_page(pdf_id, page_num)
+
+        if page is None:
+            pass
+
+        filename = "%s_%s.png" % (page.filename, page_num)
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', 'attachment; filename=' + filename)
+        self.write(page.page)
+
+
 class Server(object):
     def __init__(self, port, dbname, template_dir):
         self.db_engine = DBEngine(dbname)
@@ -134,6 +149,7 @@ class Server(object):
             (r"/pdf", PdfHandler, init_db_args),
             (r"/pdf/(?P<pdf_id>\w+)", PdfDownloadHandler, init_db_args),
             (r"/page/(?P<pdf_id>\w+)", PageHandler),
+            (r"/page/(?P<pdf_id>\w+)/(?P<page_id>\w+)", PageDownloadHandler, init_db_args),
             (r"/.*", MainHandler, init_db_args)
         ])
         self.http_server = HTTPServer(application)

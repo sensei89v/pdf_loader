@@ -33,7 +33,7 @@ if __name__ == "__main__":
     import sys
     import io
     from PyPDF2 import PdfFileReader, PdfFileWriter
-    from PIL import Image
+    from wand.image import Image
 
     if len(sys.argv) != 3:
         print("usage with file")
@@ -43,21 +43,37 @@ if __name__ == "__main__":
     dirname = sys.argv[1]
     f = open(filename, "rb")
     src_pdf = PdfFileReader(f)
+    dst_pdf = PdfFileWriter()
+    dst_pdf.addPage(src_pdf.getPage(0))
+    f1 = open("/home/sensei/ttt.pdf", "wb")
+    dst_pdf.write(f1)
+    f1.close()
 
-    for i in range(0, src_pdf.numPages):
-        # Get the first page of the PDF #
-        dst_pdf = PdfFileWriter()
-        dst_pdf.addPage(src_pdf.getPage(0))
+    #f2 = open("/home/sensei/ttt.pdf", "rb")
+    img = Image(filename = "/home/sensei/ttt.pdf")
+    img.convert("png")
+    #
+    #pdf_bytes = io.BytesIO()
+    #dst_pdf.write(pdf_bytes)
+    #pdf_bytes.seek(0)
+    #
+    #img = Image(file = pdf_bytes)
+    #img.convert("png")
 
-        # Create BytesIO #
-        pdf_bytes = io.BytesIO()
-        dst_pdf.write(pdf_bytes)
-        pdf_bytes.seek(0)
-
-        file_name = "%s/%i.png" % (dirname, i)
-        img = Image.open(pdf_bytes)
-        img.save(file_name, 'PNG')
-        pdf_bytes.flush()
+    #for i in range(0, src_pdf.numPages):
+    #    # Get the first page of the PDF #
+    #    dst_pdf = PdfFileWriter()
+    #    dst_pdf.addPage(src_pdf.getPage(0))
+    #
+    #    # Create BytesIO #
+    #    pdf_bytes = io.BytesIO()
+    #    dst_pdf.write(pdf_bytes)
+    #    pdf_bytes.seek(0)
+    #
+    #    file_name = "%s/%i.png" % (dirname, i)
+    #    img = Image.open(pdf_bytes)
+    #    img.save(file_name, 'PNG')
+    #    pdf_bytes.flush()
 
 
 #src_pdf = PyPDF2.PdfFileReader(file(src_filename, "rb"))
