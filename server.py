@@ -28,9 +28,9 @@ class BaseHandler(RequestHandler):
             return user_id
 
 
-class MainHandler(BaseHandler):
+class DefaultHandler(RequestHandler):
     def get(self):
-        self.write("Hello, world")
+        self.redirect("/login")
 
 
 class LoginHandler(BaseHandler):
@@ -156,14 +156,15 @@ class Server(object):
             'db_engine': self.db_engine,
             'template_loader': Loader(template_dir)
         }
+
         application = Application([
             (r"/login", LoginHandler, init_db_args),
             (r"/logout", LogoutHandler),
             (r"/pdf", PdfHandler, init_db_args),
             (r"/pdf/(?P<pdf_id>\w+)", PdfDownloadHandler, init_db_args),
             (r"/page/(?P<pdf_id>\w+)", PageHandler, init_db_args),
-            (r"/page/(?P<pdf_id>\w+)/(?P<page_id>\w+)", PageDownloadHandler, init_db_args),
-            (r"/.*", MainHandler, init_db_args)
+            (r"/page/(?P<pdf_id>\w+)/(?P<page_num>\w+)", PageDownloadHandler, init_db_args),
+            (r"/.*", DefaultHandler)
         ])
         self.http_server = HTTPServer(application)
 
