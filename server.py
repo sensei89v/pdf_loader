@@ -26,7 +26,13 @@ class BaseHandler(RequestHandler):
         """
         Возвращает ID пользователя из Cookies
         """
-        return self.get_cookie('user_id', None)
+        user_id = self.get_cookie('user_id', None)
+
+        if user_id is not None and not self.db_engine.is_exists_user_id(user_id):
+            user_id = None
+            self.clear_cookie('user_id')
+
+        return user_id
 
     def get_user_id_or_redirect(self):
         """
@@ -72,9 +78,9 @@ class LoginHandler(BaseHandler):
 
         if user_id is not None:
             self.set_cookie('user_id', str(user_id), path='/')
-
-        self.redirect('/pdf')
-
+            self.redirect('/pdf')
+        else:
+            self.redirect('/login')
 
 class LogoutHandler(RequestHandler):
     """

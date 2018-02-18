@@ -94,6 +94,17 @@ class DBEngine(object):
         else:
             return None
 
+    def is_exists_user_id(self, user_id):
+        """
+        Функция проверяет существует ли данный user_id в БД
+        """
+        session = self._get_session()
+        exists = session.query(func.count(User.id)).filter(User.id == user_id).one()[0]
+        session.rollback()
+        exists = exists == 1
+
+        return exists
+
     def get_pdf_list(self):
         """
         Возвращает список данных о pdf документах, хранящихся в БД
